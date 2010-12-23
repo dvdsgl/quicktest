@@ -37,9 +37,8 @@ quickTestFile opts ghcOpts file = do
 quickTest :: QuickTest ()
 quickTest = do
   file <- asks qtsSourceFile
-  props <- getProps
   emit (":load " ++ file)
-  mapM_ execProp props
+  getProps >>= mapM_ execProp
 
 execProp :: Prop -> QuickTest ()
 execProp prop = do
