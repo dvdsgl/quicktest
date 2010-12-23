@@ -19,7 +19,7 @@ I've created a module (`Demo.hs`) with some tests:
     -- This property is falsifiable:
     prop_all_integers_are_odd x = odd x
 
-To run the tests, I simply call quicktest:
+To run the tests, I simply call `quicktest`:
 
     $ quicktest Demo.hs 
     Demo.hs:prop_reverse_is_reversible:4 +++ OK, passed 100 tests.
