@@ -26,6 +26,8 @@ To run the tests, I simply call quicktest:
     Demo.hs:prop_all_integers_are_odd:7 *** Failed! Falsifiable (after 1 test):  
     0
 
+Oops! Looks like not all integers are odd!
+
 ### Requirements
 
  * haskell-platform
