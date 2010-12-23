@@ -1,52 +1,81 @@
 #!/usr/bin/env runhaskell
+{-# LANGUAGE NamedFieldPuns #-}
 
-import Text.Printf
+import Control.Monad
 import System.Environment (getArgs)
 import System.Process (readProcess)
-import Data.List (nub, partition, isPrefixOf)
+import System.Directory (doesFileExist)
+
+import Data.List
+import Data.Function (on)
+
+import Text.Printf
+
+import QuickTest.Util
+import QuickTest.Monad
+import QuickTest.Types
+
+flags :: [String]
+flags = ["-names", "+verbose"]
 
 main :: IO ()
 main = do
-  (options, files) <- partition isOption `fmap` getArgs
-  mapM_ (process options) files
+  (flags', others) <- partition (`elem` flags) `fmap` getArgs
+  (files, ghcOpts) <- partitionM doesFileExist others
 
-process :: [String] -> FilePath -> IO ()
-process opts file = do
-  source <- readFile file
+  let opts = optionsFromFlags flags'
+  -- Turn down GHC verbosity, because it messes up quicktest output.
+  let ghcOpts' =  "-v0" : ghcOpts
+  mapM_ (quickTestFile opts ghcOpts') files
 
-  let (showNames, opts') = getOption "+names" opts
-      (verbose, opts'')  = getOption "+verbose" opts'
-      showProp name      = if showNames then printf "putStr \"%s: \"" name else "return ()"
-      quickCheckImpl     = if verbose then "verboseCheck" else "quickCheck"
-      quickCheck name    = printf "%s >> Test.QuickCheck.%s %s" (showProp name) quickCheckImpl name
+quickTestFile :: Options -> GHCOptions -> FilePath -> IO ()
+quickTestFile opts ghcOpts file = do
+  names <- getNames `fmap` readFile file
+  let snippets = runQuickTest (QuickTestState file names opts) quickTest
+  unless (null snippets) $ do
+    ghci ghcOpts file snippets >>= putStr
 
-      names = nub
-            . filter isProp
-            . map firstWord
-            . map unliterate
-            . lines
-            $ source
+quickTest :: QuickTest ()
+quickTest = do
+  file <- asks qtsSourceFile
+  props <- getProps
+  emit (":load " ++ file)
+  mapM_ execProp props
 
-  if null names
-    then do
-      return ()
-    else do
-      let input = unlines $ printf ":load %s" file : map quickCheck names
-      readProcess "ghci" opts'' input >>= putStr
+execProp :: Prop -> QuickTest ()
+execProp prop = do
+  displayProp prop
+  verbose <- askOption optVerbose
+  let impl = if verbose then "verboseCheck" else "quickCheck"
+  emit $ printf "Test.QuickCheck.%s %s" impl (propName prop)
 
--- ugly hack for .lhs files, is there a better way?
-unliterate :: String -> String
-unliterate ('>' : line) = line
-unliterate line         = line
+displayProp :: Prop -> QuickTest ()
+displayProp prop = do
+  showNames <- askOption optShowNames
+  when showNames $ do
+    emit $ printf "putStr \"%s \"" (show prop)
 
-isOption (c : _) = c `elem` "+-"
-isOption _       = False
+getNames :: Snippet -> [(String, LineNumber)]
+getNames = nubBy ((==) `on` fst)
+         . filter (not . null . fst)
+         . flip zip [1..]
+         . map (fst . head . lex)
+         . lines
 
-firstWord :: String -> String
-firstWord = fst . head . lex
+getProps :: QuickTest [Prop]
+getProps = do
+  file <- asks qtsSourceFile
+  names <- asks qtsSourceNames
+  return [Prop name file line | (name, line) <- names, "prop_" `isPrefixOf` name]
 
-isProp :: String -> Bool
-isProp = isPrefixOf "prop_" . unliterate
+ghci :: GHCOptions -> FilePath -> [Snippet] -> IO String
+ghci opts file snippets = do
+  let snippets' = printf ":load %s" file : snippets
+  readProcess "ghci" opts (unlines snippets')
 
-getOption :: String -> [String] -> (Bool, [String])
-getOption option options = (option `elem` options, filter (/= option) options)
+optionsFromFlags :: [String] -> Options
+optionsFromFlags args =
+  Options {
+      optShowNames = "-names" `notElem` args
+    , optVerbose   = "+verbose" `elem` args
+  }
