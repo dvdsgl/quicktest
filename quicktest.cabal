@@ -2,7 +2,7 @@ Name:                quicktest
 Version:             0.1
 Synopsis:            Empty
 Description:         Simplifies running unit tests.
-License:             MIT
+License:             BSD3
 Author:              David Siegel
 Maintainer:          djsiegel@gmail.com
 Stability:           Experimental
