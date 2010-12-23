@@ -1,4 +1,3 @@
-#!/usr/bin/env runhaskell
 {-# LANGUAGE NamedFieldPuns #-}
 
 import Control.Monad
@@ -33,7 +32,7 @@ quickTestFile opts ghcOpts file = do
   names <- getNames `fmap` readFile file
   let snippets = runQuickTest (QuickTestState file names opts) quickTest
   unless (null snippets) $ do
-    ghci ghcOpts file snippets >>= putStr
+    ghci ghcOpts snippets >>= putStr
 
 quickTest :: QuickTest ()
 quickTest = do
@@ -55,23 +54,22 @@ displayProp prop = do
   when showNames $ do
     emit $ printf "putStr \"%s \"" (show prop)
 
-getNames :: Snippet -> [(String, LineNumber)]
-getNames = nubBy ((==) `on` fst)
-         . filter (not . null . fst)
-         . flip zip [1..]
-         . map (fst . head . lex)
-         . lines
-
 getProps :: QuickTest [Prop]
 getProps = do
   file <- asks qtsSourceFile
   names <- asks qtsSourceNames
   return [Prop name file line | (name, line) <- names, "prop_" `isPrefixOf` name]
 
-ghci :: GHCOptions -> FilePath -> [Snippet] -> IO String
-ghci opts file snippets = do
-  let snippets' = printf ":load %s" file : snippets
-  readProcess "ghci" opts (unlines snippets')
+ghci :: GHCOptions -> [Snippet] -> IO String
+ghci opts snippets = do
+  readProcess "ghci" opts (unlines snippets)
+
+getNames :: Snippet -> [(String, LineNumber)]
+getNames = nubBy ((==) `on` fst)
+         . filter (not . null . fst)
+         . flip zip [1..]
+         . map (fst . head . lex)
+         . lines
 
 optionsFromFlags :: [String] -> Options
 optionsFromFlags args =
