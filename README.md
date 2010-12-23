@@ -5,6 +5,8 @@ QuickTest is a tool that inspects Haskell source files for unit tests, and runs 
 
 QuickTest currently supports QuickCheck properties, and will soon support HUnit tests. QuickTest identifies QuickCheck properties by the prefix "prop_", so be sure to name your properties accordingly.
 
+QuickTest is based on [quickcheck-script](http://hackage.haskell.org/package/quickcheck-script) by Koen Claessen and John Hughes.
+
 ### Example
 
 I've created a module (`Demo.hs`) with some tests:
