@@ -1,13 +1,4 @@
 #!/usr/bin/env runhaskell
--- This file defines a command
---      quickCheck <options> <files>
--- which invokes quickCheck on all properties defined in the files given as
--- arguments, by generating an input script for hugs and then invoking it.
--- quickCheck recognises the options
---      +names     print the name of each property before checking it
---      +verbose   displays each test case before running
--- Other options (beginning with + or -) are passed unchanged to ghci.
---
 
 import Text.Printf
 import System.Environment (getArgs)
