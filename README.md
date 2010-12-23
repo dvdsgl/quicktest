@@ -3,7 +3,7 @@ QuickTest
 
 QuickTest inspects Haskell source files for unit tests, and runs all tests found through GHCi with a dynamically generated test harness. This means you can simply write properties about your code, and QuickTest will test these properties *en masse* using QuickCheck.
 
-QuickTest currently supports QuickCheck properties, and will soon support HUnit tests. QuickTest identifies QuickCheck properties by the prefix "prop_", so be sure to name your properties accordingly.
+QuickTest currently supports QuickCheck properties, and will soon support HUnit tests. QuickTest identifies QuickCheck properties by the prefix `prop_`, so be sure to name your properties accordingly.
 
 QuickTest is based on [quickcheck-script](http://hackage.haskell.org/package/quickcheck-script) by Koen Claessen and John Hughes.
 
