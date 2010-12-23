@@ -1,8 +1,13 @@
+QuickTest
+=========
+
 QuickTest is a tool that inspects Haskell source files for unit tests, and runs tests though GHCi with a dynamically generated test harness. This means you can simply write properties about your code, and QuickTest will test these properties en masse using QuickCheck.
 
 QuickTest currently supports QuickCheck properties, and will soon support HUnit tests. QuickTest identifies QuickCheck properties by the prefix "prop_", so be sure to name your properties accordingly.
 
-For example, I've created a module (`Demo.hs`) with some tests:
+### Example
+
+I've created a module (`Demo.hs`) with some tests:
 
     module Demo where
     
@@ -19,17 +24,13 @@ To run the tests, I simply call quicktest:
     Demo.hs:prop_all_integers_are_odd:7 *** Failed! Falsifiable (after 1 test):  
     0
 
-Requirements:
+### Requirements
 
  * haskell-platform
 
-To install:
+### Installation
 
     $ git clone git://github.com/davidsiegel/quicktest.git
     $ cd quicktest
     $ cabal install
-
-To run:
-
-    $ quicktest [FILE ...]
 
