@@ -1,0 +1,29 @@
+QuickTest is a tool that inspects Haskell source files for unit tests, and runs a dynamic test harness using GHCi.
+
+QuickTest currently supports QuickCheck properties, and will soon support HUnit tests. QuickTest identifies QuickCheck properties by the prefix "prop_", so be sure to name your properties accordingly.
+
+Requirements:
+	* haskell-platform
+
+To install:
+	$ git clone git://github.com/davidsiegel/quicktest.git
+	$ cd quicktest
+	$ cabal install
+
+To run:
+	$ quicktest [FILE ...]
+
+Example:
+	$ cat Demo.hs 
+	module Demo where
+
+	-- Classic QuickCheck sample property:
+	prop_reverse_is_reversible xs = (reverse . reverse) xs == xs
+
+	-- This property is falsifiable:
+	prop_all_integers_are_odd x = odd x
+
+	$ quicktest Demo.hs 
+	Demo.hs:prop_reverse_is_reversible:4 +++ OK, passed 100 tests.
+	Demo.hs:prop_all_integers_are_odd:7 *** Failed! Falsifiable (after 1 test):  
+	0
