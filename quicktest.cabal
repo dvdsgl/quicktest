@@ -1,5 +1,5 @@
 Name:                quicktest
-Version:             0.1
+Version:             0.1.1
 Synopsis:            A reflective batch tester for Haskell.
 Description:
   QuickTest inspects Haskell source files for unit tests, and runs all tests found through GHCi with a dynamically generated test harness. This means you can simply write properties about your code, and QuickTest will test these properties en masse using QuickCheck. QuickTest is based on quickcheck-script by Koen Claessen and John Hughes.
@@ -19,7 +19,7 @@ Executable quicktest
   extensions: NamedFieldPuns, PackageImports, GeneralizedNewtypeDeriving 
 
   Build-depends:
-    base >= 4 && <= 4,
+    base >= 3 && <= 4,
     haskell98,
     mtl,
     process,
