@@ -1,4 +1,4 @@
-{-# LANGUAGE NamedFieldPuns #-}
+{-# LANGUAGE NamedFieldPuns, ViewPatterns #-}
 
 import Control.Monad
 import System.Environment (getArgs)
@@ -7,6 +7,7 @@ import System.Directory (doesFileExist)
 
 import Data.List
 import Data.Function (on)
+import Data.Maybe (fromJust, isJust)
 
 import Text.Printf
 
@@ -65,10 +66,15 @@ ghci opts snippets = do
 
 getNames :: Snippet -> [(String, LineNumber)]
 getNames = nubBy ((==) `on` fst)
-         . filter (not . null . fst)
+         . map (\(name, line) -> (fromJust name, line))
+         . filter (isJust . fst)
          . flip zip [1..]
-         . map (fst . head . lex)
+         . map getName
          . lines
+
+getName :: Snippet -> Maybe String
+getName (lex -> (name, _) : _) = Just name
+getName _                      = Nothing
 
 optionsFromFlags :: [String] -> Options
 optionsFromFlags args =
