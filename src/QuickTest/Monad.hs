@@ -6,11 +6,15 @@ module QuickTest.Monad
   , asks
   , emit
   , askOption
+  , load
+  , quickCheck
+  , verboseCheck
   ) where
 
-import Control.Monad
 import "mtl" Control.Monad.Reader
 import "mtl" Control.Monad.Writer
+
+import Text.Printf
 
 import QuickTest.Types
 
@@ -20,9 +24,18 @@ newtype QuickTest a = QuickTest { runQT :: WriterT [Snippet] (Reader QuickTestSt
 runQuickTest :: QuickTestState -> QuickTest () -> [Snippet]
 runQuickTest st = snd . flip runReader st . runWriterT . runQT
 
+askOption :: (Options -> a) -> QuickTest a
+askOption f = asks (f . qtsOptions)
+
 emit :: Snippet -> QuickTest ()
 emit = tell . lines
 
-askOption :: (Options -> a) -> QuickTest a
-askOption f = asks (f . qtsOptions)
+load :: FilePath -> QuickTest ()
+load file = emit (":load " ++ file)
+
+quickCheck :: Prop -> QuickTest ()
+quickCheck Prop { propName = name } = emit $ printf "Test.QuickCheck.quickCheck %s" name
+
+verboseCheck :: Prop -> QuickTest ()
+verboseCheck Prop { propName = name } = emit $ printf "Test.QuickCheck.verboseCheck %s" name
 

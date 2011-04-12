@@ -38,15 +38,14 @@ quickTestFile opts ghcOpts file = do
 quickTest :: QuickTest ()
 quickTest = do
   file <- asks qtsSourceFile
-  emit (":load " ++ file)
+  load file
   getProps >>= mapM_ execProp
 
 execProp :: Prop -> QuickTest ()
 execProp prop = do
   displayProp prop
   verbose <- askOption optVerbose
-  let impl = if verbose then "verboseCheck" else "quickCheck"
-  emit $ printf "Test.QuickCheck.%s %s" impl (propName prop)
+  (if verbose then verboseCheck else quickCheck) prop
 
 displayProp :: Prop -> QuickTest ()
 displayProp prop = do
