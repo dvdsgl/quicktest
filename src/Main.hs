@@ -7,7 +7,7 @@ import System.Directory (doesFileExist)
 
 import Data.List
 import Data.Function (on)
-import Data.Maybe (fromJust, isJust)
+import Data.Maybe (isJust)
 
 import Text.Printf
 
@@ -65,7 +65,7 @@ ghci opts snippets = do
 
 getNames :: Snippet -> [(String, LineNumber)]
 getNames = nubBy ((==) `on` fst)
-         . map (\(name, line) -> (fromJust name, line))
+         . map (\(Just name, line) -> (name, line))
          . filter (isJust . fst)
          . flip zip [1..]
          . map getName
