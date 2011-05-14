@@ -2,7 +2,7 @@
 
 import Control.Monad
 import System.Environment (getArgs)
-import System.Process (readProcess)
+import System.Process (readProcessWithExitCode)
 import System.Directory (doesFileExist)
 import System.Exit
 
@@ -38,9 +38,16 @@ quickTestFile opts ghcOpts file = do
   let snippets = runQuickTest (QuickTestState file names opts) quickTest
   if null snippets then return $ Right ()
     else do
-    output <- ghci ghcOpts snippets    
-    putStr output
-    return $ parseResult output
+    (exitCode, stdout, stderr) <- ghci ghcOpts snippets
+    printResult stdout stderr
+    return $ handleResult exitCode stdout stderr
+
+printResult::String -> String -> IO ()
+printResult out err = putStr out >> putStr err
+
+handleResult::ExitCode -> String -> String -> Either String ()
+handleResult ExitSuccess stdout _stderr = parseResult stdout
+handleResult _err _stdout stderr = Left stderr
            
 parseResult::String -> Either String ()
 parseResult output | isSuccess = Right () 
@@ -72,9 +79,9 @@ getProps = do
   names <- asks qtsSourceNames
   return [Prop name file line | (name, line) <- names, "prop_" `isPrefixOf` name]
 
-ghci :: GHCOptions -> [Snippet] -> IO String
+ghci :: GHCOptions -> [Snippet] -> IO (ExitCode, String, String)
 ghci opts snippets = do
-  readProcess "ghci" opts (unlines snippets)
+  readProcessWithExitCode "ghci" opts (unlines snippets)
 
 getNames :: Snippet -> [(String, LineNumber)]
 getNames = nubBy ((==) `on` fst)
