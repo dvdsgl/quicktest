@@ -15,6 +15,7 @@ import Text.Printf
 import QuickTest.Util
 import QuickTest.Monad
 import QuickTest.Types
+import Data.Either
 
 flags :: [String]
 flags = ["-names", "+verbose"]
@@ -27,21 +28,27 @@ main = do
   let opts = optionsFromFlags flags'
   -- Turn down GHC verbosity, because it messes up quicktest output.
   let ghcOpts' =  "-v0" : ghcOpts
-  failure <- any not `fmap` mapM (quickTestFile opts ghcOpts') files
-  if failure then exitFailure
-    else exitSuccess
+  success <- (null . lefts) `fmap` mapM (quickTestFile opts ghcOpts') files
+  if success then exitSuccess
+    else exitFailure
 
-quickTestFile :: Options -> GHCOptions -> FilePath -> IO Bool
+quickTestFile :: Options -> GHCOptions -> FilePath -> IO (Either String ())
 quickTestFile opts ghcOpts file = do
   names <- getNames `fmap` readFile file
   let snippets = runQuickTest (QuickTestState file names opts) quickTest
-  if null snippets then return True
+  if null snippets then return $ Right ()
     else do
     output <- ghci ghcOpts snippets    
     putStr output
-    let falsifiable = isInfixOf "Failed! Falsifiable" output
-        exception = isInfixOf "Failed! Exception" output
-    return $ not $ falsifiable || exception
+    return $ parseResult output
+           
+parseResult::String -> Either String ()
+parseResult output | isFailedOutput = Left output
+                   | otherwise = Right ()
+                     where
+                       isFailedOutput = falsifiable || exception
+                       falsifiable = isInfixOf "Failed! Falsifiable" output
+                       exception = isInfixOf "Failed! Exception" output
 
 quickTest :: QuickTest ()
 quickTest = do
