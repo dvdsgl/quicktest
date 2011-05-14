@@ -4,6 +4,7 @@ import Control.Monad
 import System.Environment (getArgs)
 import System.Process (readProcess)
 import System.Directory (doesFileExist)
+import System.Exit
 
 import Data.List
 import Data.Function (on)
@@ -26,14 +27,21 @@ main = do
   let opts = optionsFromFlags flags'
   -- Turn down GHC verbosity, because it messes up quicktest output.
   let ghcOpts' =  "-v0" : ghcOpts
-  mapM_ (quickTestFile opts ghcOpts') files
+  failure <- any not `fmap` mapM (quickTestFile opts ghcOpts') files
+  if failure then exitFailure
+    else exitSuccess
 
-quickTestFile :: Options -> GHCOptions -> FilePath -> IO ()
+quickTestFile :: Options -> GHCOptions -> FilePath -> IO Bool
 quickTestFile opts ghcOpts file = do
   names <- getNames `fmap` readFile file
   let snippets = runQuickTest (QuickTestState file names opts) quickTest
-  unless (null snippets) $ do
-    ghci ghcOpts snippets >>= putStr
+  if null snippets then return True
+    else do
+    output <- ghci ghcOpts snippets    
+    putStr output
+    let falsifiable = isInfixOf "Failed! Falsifiable" output
+        exception = isInfixOf "Failed! Exception" output
+    return $ not $ falsifiable || exception
 
 quickTest :: QuickTest ()
 quickTest = do
