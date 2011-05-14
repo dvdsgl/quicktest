@@ -43,12 +43,10 @@ quickTestFile opts ghcOpts file = do
     return $ parseResult output
            
 parseResult::String -> Either String ()
-parseResult output | isFailedOutput = Left output
-                   | otherwise = Right ()
+parseResult output | isSuccess = Right () 
+                   | otherwise = Left output
                      where
-                       isFailedOutput = falsifiable || exception
-                       falsifiable = isInfixOf "Failed! Falsifiable" output
-                       exception = isInfixOf "Failed! Exception" output
+                       isSuccess = "+++ OK, passed" `isInfixOf` output
 
 quickTest :: QuickTest ()
 quickTest = do
